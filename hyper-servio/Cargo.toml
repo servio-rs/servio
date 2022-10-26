@@ -1,0 +1,15 @@
+[package]
+name = "hyper-servio"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+hyper = { version = "0.14.20", features = ["full", "http1"] }
+tokio = { version = "1.21.2", features = ["rt", "net", "macros", "rt-multi-thread"] }
+http-body = "0.4.5"
+http = "0.2.8"
+servio = { path = "../servio" }
+futures-core = "0.3.25"
+futures = "0.3.25"
