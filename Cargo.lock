@@ -3,12 +3,6 @@
 version = 3
 
 [[package]]
-name = "anyhow"
-version = "1.0.66"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "216261ddc8289130e551ddcd5ce8a064710c0d064a4d2895c67151c92b5443f6"
-
-[[package]]
 name = "autocfg"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -178,6 +172,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "http-body"
+version = "1.0.0-rc1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f038884e63a5a85612eeea789f5e0f54c3ada7306234502543b23d98744781f0"
+dependencies = [
+ "bytes",
+ "http",
+]
+
+[[package]]
+name = "http-body-util"
+version = "0.1.0-rc.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d177b8dc6ca73620521c881e0a7d7b495b6b606ea6d079800aa83f5bcbb303fc"
+dependencies = [
+ "bytes",
+ "futures-util",
+ "http",
+ "http-body 1.0.0-rc1",
+ "pin-project-lite",
+]
+
+[[package]]
 name = "httparse"
 version = "1.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -191,9 +208,9 @@ checksum = "c4a1e36c821dbe04574f602848a19f742f4fb3c98d40449f11bcad18d6b17421"
 
 [[package]]
 name = "hyper"
-version = "0.14.20"
+version = "1.0.0-rc.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02c929dc5c39e335a03c405292728118860721b10190d98c2a0f0efd5baafbac"
+checksum = "d85cfb5d312f278a651d0567873b9c32b28d8ced5603a9242c73c54c93fec814"
 dependencies = [
  "bytes",
  "futures-channel",
@@ -201,14 +218,12 @@ dependencies = [
  "futures-util",
  "h2",
  "http",
- "http-body",
+ "http-body 1.0.0-rc1",
  "httparse",
  "httpdate",
  "itoa",
  "pin-project-lite",
- "socket2",
  "tokio",
- "tower-service",
  "tracing",
  "want",
 ]
@@ -217,10 +232,12 @@ dependencies = [
 name = "hyper-servio"
 version = "0.1.0"
 dependencies = [
+ "bytes",
  "futures",
  "futures-core",
  "http",
- "http-body",
+ "http-body 0.4.5",
+ "http-body-util",
  "hyper",
  "servio",
  "tokio",
@@ -325,9 +342,7 @@ dependencies = [
 name = "servio"
 version = "0.1.0"
 dependencies = [
- "anyhow",
  "bytes",
- "futures",
  "futures-core",
  "http",
 ]
@@ -404,12 +419,6 @@ dependencies = [
  "tokio",
  "tracing",
 ]
-
-[[package]]
-name = "tower-service"
-version = "0.3.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b6bc1c9ce2b5135ac7f93c72918fc37feb872bdc6a5533a8b85eb4b86bfdae52"
 
 [[package]]
 name = "tracing"
