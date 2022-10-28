@@ -1,11 +1,13 @@
 extern crate core;
 
 use bytes::Bytes;
+use futures_core::Stream;
+use futures_util::StreamExt;
 use hyper::body::{Body, Frame};
 use hyper::service::Service;
 use hyper::{body::Incoming as IncomingBody, Request, Response};
-use servio::http::{HttpResponseEvent, HttpScope, EVENT_HTTP_RESPONSE_BODY, PROTOCOL_HTTP};
 use servio::{AsgiService, Event, Scope};
+use servio_http::http::{HttpResponseEvent, HttpScope, EVENT_HTTP_RESPONSE_BODY, PROTOCOL_HTTP};
 use std::future::Future;
 use std::io;
 use std::net::SocketAddr;
@@ -31,7 +33,7 @@ pub struct BodyServerStream {
     body: IncomingBody,
 }
 
-impl futures_core::Stream for BodyServerStream {
+impl Stream for BodyServerStream {
     type Item = Event;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
@@ -58,7 +60,7 @@ impl futures_core::Stream for BodyServerStream {
 
 pub struct BodyAppStream<S>
 where
-    S: futures_core::Stream<Item = Event>,
+    S: Stream<Item = Event>,
 {
     stream: S,
     has_trailers: bool,
@@ -68,7 +70,7 @@ where
 
 impl<S> BodyAppStream<S>
 where
-    S: futures_core::Stream<Item = Event>,
+    S: Stream<Item = Event>,
 {
     pub fn new(stream: S) -> Self {
         Self {
@@ -82,7 +84,7 @@ where
 
 impl<S> Body for BodyAppStream<S>
 where
-    S: futures_core::Stream<Item = Event> + Unpin,
+    S: Stream<Item = Event> + Unpin,
 {
     type Data = Bytes;
     type Error = io::Error;
@@ -91,7 +93,7 @@ where
         mut self: Pin<&mut Self>,
         cx: &mut Context<'_>,
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
-        let res = ready!(Pin::new(&mut self.stream).poll_next(cx));
+        let res = ready!(self.stream.poll_next_unpin(cx));
         if let Some(event) = res {
             match event.event_type.as_ref() {
                 EVENT_HTTP_RESPONSE_BODY => {

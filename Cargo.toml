@@ -1,2 +1,8 @@
 [workspace]
-members = ["servio", "hyper-servio"]
+members = [
+    "actix-web-servio",
+    "hyper-servio",
+    "servio",
+    "servio-helloworld",
+    "servio-http",
+]

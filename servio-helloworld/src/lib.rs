@@ -1,8 +1,6 @@
-use crate::{
-    http::{HttpResponseEvent, HttpScope, EVENT_HTTP_RESPONSE_BODY},
-    AsgiService, Event, Scope,
-};
 use futures_core::Stream;
+use servio::{AsgiService, Event, Scope};
+use servio_http::http::{HttpResponseEvent, HttpScope, EVENT_HTTP_RESPONSE_BODY};
 use std::any::TypeId;
 use std::io;
 use std::pin::Pin;
@@ -15,19 +13,20 @@ impl Stream for HelloStream {
     type Item = Event;
 
     fn poll_next(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        let mut http_event = HttpResponseEvent::default();
+        http_event.body = "Hello, world!".into();
+        http_event.end = true;
+
         Poll::Ready(Some(Event {
             event_type: EVENT_HTTP_RESPONSE_BODY.into(),
-            event: Arc::new(HttpResponseEvent {
-                body: "Hello, world!".into(),
-                end: true,
-            }),
+            event: Arc::new(http_event),
         }))
     }
 }
 
-pub struct Hello {}
+pub struct HelloWorldService {}
 
-impl<ServerStream> AsgiService<ServerStream> for Hello
+impl<ServerStream> AsgiService<ServerStream> for HelloWorldService
 where
     ServerStream: Stream<Item = Event>,
 {

@@ -2,7 +2,7 @@ extern crate core;
 
 use hyper::server::conn::http1;
 use hyper_servio::Servio2Hyper;
-use servio::hello::Hello;
+use servio_helloworld::HelloWorldService;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 
@@ -18,7 +18,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
         tokio::task::spawn(async move {
             if let Err(err) = http1::Builder::new()
-                .serve_connection(stream, Servio2Hyper::new(Hello {}, Some(client)))
+                .serve_connection(
+                    stream,
+                    Servio2Hyper::new(HelloWorldService {}, Some(client)),
+                )
                 .await
             {
                 println!("Failed to serve connection: {:?}", err);

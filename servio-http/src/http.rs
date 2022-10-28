@@ -1,5 +1,4 @@
 use bytes::Bytes;
-use std::fmt::Debug;
 use std::net::SocketAddr;
 
 pub const PROTOCOL_HTTP: &str = "http";
