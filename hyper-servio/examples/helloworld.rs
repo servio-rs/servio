@@ -16,12 +16,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     loop {
         let (stream, client) = listener.accept().await?;
 
+        let service = Servio2Hyper::new(HelloWorldService {}, Some(addr), Some(client));
+
         tokio::task::spawn(async move {
             if let Err(err) = http1::Builder::new()
-                .serve_connection(
-                    stream,
-                    Servio2Hyper::new(HelloWorldService {}, Some(client)),
-                )
+                .serve_connection(stream, service)
                 .await
             {
                 println!("Failed to serve connection: {:?}", err);
