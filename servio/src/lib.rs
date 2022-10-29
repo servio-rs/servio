@@ -80,7 +80,7 @@ impl Event {
 }
 
 pub trait AsgiService<ServerStream: Stream<Item = Event>> {
-    type AppStream: Stream<Item = Event> + Send;
+    type AppStream: Stream<Item = Event> + Send + Unpin;
     type Error: StdError;
 
     fn call(

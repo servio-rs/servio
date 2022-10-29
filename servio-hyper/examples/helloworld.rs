@@ -1,8 +1,6 @@
-extern crate core;
-
 use hyper::server::conn::http1;
-use hyper_servio::Servio2Hyper;
 use servio_helloworld::HelloWorldService;
+use servio_hyper::Servio2Hyper;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 

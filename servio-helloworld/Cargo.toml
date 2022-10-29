@@ -7,5 +7,6 @@ edition = "2021"
 
 [dependencies]
 futures-core = "0.3.25"
+futures-util = "0.3.25"
 servio = { path = "../servio" }
 servio-http = { path = "../servio-http" }

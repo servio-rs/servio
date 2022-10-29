@@ -1,8 +1,8 @@
 [workspace]
 members = [
-    "hyper-servio",
     "servio",
     "servio-helloworld",
     "servio-http",
+    "servio-hyper",
     "servio-util",
 ]

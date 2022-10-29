@@ -3,11 +3,11 @@ use futures_core::future::BoxFuture;
 use futures_core::Stream;
 use futures_util::StreamExt;
 use hyper::body::{Body, Frame};
-use hyper::service::Service;
+use hyper::service::Service as HyperService;
 use hyper::{body::Incoming as IncomingBody, Request, Response};
 use servio::{AsgiService, Event, Scope};
 use servio_http::http::{
-    HttpEvent, HttpScope, ResponseChunk, ResponseTrailer, EVENT_HTTP, PROTOCOL_HTTP,
+    HttpEvent, HttpScope, ResponseChunk, ResponseStart, ResponseTrailer, EVENT_HTTP, PROTOCOL_HTTP,
 };
 use std::io;
 use std::net::SocketAddr;
@@ -26,6 +26,47 @@ impl<T> Servio2Hyper<T> {
             inner: service,
             server,
             client,
+        }
+    }
+}
+
+impl<T> Servio2Hyper<T>
+where
+    T: AsgiService<BodyServerStream> + 'static,
+{
+    async fn build_response(
+        mut app_stream: T::AppStream,
+    ) -> Result<
+        <Servio2Hyper<T> as HyperService<Request<IncomingBody>>>::Response,
+        <Servio2Hyper<T> as HyperService<Request<IncomingBody>>>::Error,
+    > {
+        let event = match app_stream.next().await {
+            Some(event) => event,
+            None => panic!("Unexpected EOF from application"),
+        };
+
+        let event = match event.get::<HttpEvent>() {
+            Some(event) => event,
+            None => panic!("Cannot get message from scope"),
+        };
+
+        match event.as_ref() {
+            HttpEvent::ResponseStart(ResponseStart {
+                status,
+                headers,
+                trailers,
+                ..
+            }) => {
+                let body = BodyAppStream::new(app_stream, *trailers);
+                let response = {
+                    let mut builder = Response::builder().status(status);
+                    builder.headers_mut().unwrap().clone_from(headers);
+                    builder.body(body).unwrap()
+                };
+
+                Ok(response)
+            }
+            _ => panic!("Unexpected message type"),
         }
     }
 }
@@ -73,10 +114,10 @@ impl<S> BodyAppStream<S>
 where
     S: Stream<Item = Event>,
 {
-    pub fn new(stream: S) -> Self {
+    pub fn new(stream: S, has_trailers: bool) -> Self {
         Self {
             stream,
-            has_trailers: false,
+            has_trailers,
             body_end: false,
             trailers_end: false,
         }
@@ -124,7 +165,7 @@ where
     }
 }
 
-impl<T> Service<Request<IncomingBody>> for Servio2Hyper<T>
+impl<T> HyperService<Request<IncomingBody>> for Servio2Hyper<T>
 where
     T: AsgiService<BodyServerStream> + 'static,
 {
@@ -151,12 +192,6 @@ where
         // Fire scope and server stream into the wrapped service, get app stream in return
         let app_stream = self.inner.call(scope, server_stream).unwrap();
 
-        let fut = async move {
-            let body = BodyAppStream::new(app_stream);
-
-            Ok(Response::builder().body(body).unwrap())
-        };
-
-        Box::pin(fut)
+        Box::pin(Self::build_response(app_stream))
     }
 }

@@ -1,28 +1,8 @@
 use futures_core::stream::BoxStream;
 use futures_core::Stream;
 use servio::{AsgiService, Event, Scope};
-use servio_http::http::{HttpEvent, HttpScope, ResponseChunk, EVENT_HTTP};
-use std::any::TypeId;
+use servio_http::http::{HttpEvent, ResponseChunk, ResponseStart, EVENT_HTTP};
 use std::io;
-use std::pin::Pin;
-use std::task::{Context, Poll};
-
-struct HelloStream {}
-
-impl Stream for HelloStream {
-    type Item = Event;
-
-    fn poll_next(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        let http_event = HttpEvent::ResponseChunk({
-            let mut event = ResponseChunk::default();
-            event.body = "Hello, world!".into();
-            event
-        });
-
-        Poll::Ready(Some(Event::new(EVENT_HTTP.into(), http_event)))
-    }
-}
-
 pub struct HelloWorldService;
 
 impl<ServerStream> AsgiService<ServerStream> for HelloWorldService
@@ -34,12 +14,20 @@ where
 
     fn call(
         &mut self,
-        scope: Scope,
+        _scope: Scope,
         _server_events: ServerStream,
     ) -> Result<Self::AppStream, Self::Error> {
-        println!("{:?}", TypeId::of::<HttpScope>());
-        println!("{scope:?}");
+        let mut resp = ResponseChunk::default();
+        resp.body = "Hello, world!".into();
 
-        Ok(Box::pin(HelloStream {}))
+        let events = [
+            Event::new(
+                EVENT_HTTP.into(),
+                HttpEvent::ResponseStart(ResponseStart::default()),
+            ),
+            Event::new(EVENT_HTTP.into(), HttpEvent::ResponseChunk(resp)),
+        ];
+
+        Ok(Box::pin(futures_util::stream::iter(events)))
     }
 }

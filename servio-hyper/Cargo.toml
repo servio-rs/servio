@@ -1,5 +1,5 @@
 [package]
-name = "hyper-servio"
+name = "servio-hyper"
 version = "0.1.0"
 edition = "2021"
 
@@ -17,5 +17,4 @@ servio-http = { path = "../servio-http" }
 hyper = { version = "1.0.0-rc.1", features = ["full"] }
 tokio = { version = "1.21.2", features = ["rt", "net", "macros", "rt-multi-thread"] }
 servio-helloworld = { path = "../servio-helloworld" }
-servio-util = { path = "../servio-util" }
 tracing-subscriber = "0.3.16"

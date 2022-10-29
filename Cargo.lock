@@ -168,22 +168,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "hyper-servio"
-version = "0.1.0"
-dependencies = [
- "bytes",
- "futures-core",
- "futures-util",
- "hyper",
- "servio",
- "servio-helloworld",
- "servio-http",
- "servio-util",
- "tokio",
- "tracing-subscriber",
-]
-
-[[package]]
 name = "indexmap"
 version = "1.9.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -312,6 +296,7 @@ name = "servio-helloworld"
 version = "0.1.0"
 dependencies = [
  "futures-core",
+ "futures-util",
  "servio",
  "servio-http",
 ]
@@ -322,6 +307,21 @@ version = "0.1.0"
 dependencies = [
  "bytes",
  "http",
+]
+
+[[package]]
+name = "servio-hyper"
+version = "0.1.0"
+dependencies = [
+ "bytes",
+ "futures-core",
+ "futures-util",
+ "hyper",
+ "servio",
+ "servio-helloworld",
+ "servio-http",
+ "tokio",
+ "tracing-subscriber",
 ]
 
 [[package]]
