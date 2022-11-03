@@ -1,15 +1,20 @@
+mod websocket;
+
 use bytes::Bytes;
 use futures_core::future::BoxFuture;
+use futures_core::stream::BoxStream;
 use futures_core::Stream;
 use futures_util::StreamExt;
+use http::{Request, Response};
+use hyper::body::Incoming as IncomingBody;
 use hyper::body::{Body, Frame};
 use hyper::service::Service as HyperService;
-use hyper::{body::Incoming as IncomingBody, Request, Response};
-use servio::{AsgiService, Event, Scope};
 use servio_http::http::{
-    HttpEvent, HttpScope, ResponseChunk, ResponseStart, ResponseTrailer, EVENT_HTTP, PROTOCOL_HTTP,
+    HttpEvent, HttpScope, RequestChunk, ResponseChunk, ResponseStart, ResponseTrailer, EVENT_HTTP,
+    PROTOCOL_HTTP,
 };
-use std::io;
+use servio_service::{Event, Scope, Service};
+use std::error::Error as StdError;
 use std::net::SocketAddr;
 use std::pin::Pin;
 use std::task::{ready, Context, Poll};
@@ -20,7 +25,13 @@ pub struct Servio2Hyper<T> {
     client: Option<SocketAddr>,
 }
 
-impl<T> Servio2Hyper<T> {
+type BoxError = Box<dyn StdError + Send + Sync>;
+type BoxBody = Pin<Box<dyn Body<Error = BoxError, Data = Bytes> + Send>>;
+
+impl<T> Servio2Hyper<T>
+where
+    T: Service<BoxStream<'static, Event>> + 'static,
+{
     pub fn new(service: T, server: Option<SocketAddr>, client: Option<SocketAddr>) -> Self {
         Self {
             inner: service,
@@ -28,22 +39,17 @@ impl<T> Servio2Hyper<T> {
             client,
         }
     }
-}
 
-impl<T> Servio2Hyper<T>
-where
-    T: AsgiService<BodyServerStream> + 'static,
-{
-    async fn build_response(
-        mut app_stream: T::AppStream,
-    ) -> Result<
-        <Servio2Hyper<T> as HyperService<Request<IncomingBody>>>::Response,
-        <Servio2Hyper<T> as HyperService<Request<IncomingBody>>>::Error,
-    > {
+    async fn build_response<S>(mut app_stream: S) -> Result<Response<BoxBody>, BoxError>
+    where
+        S: Stream<Item = Event> + Send + Unpin + 'static,
+    {
+        println!("abd1");
         let event = match app_stream.next().await {
             Some(event) => event,
             None => panic!("Unexpected EOF from application"),
         };
+        println!("abd2");
 
         let event = match event.get::<HttpEvent>() {
             Some(event) => event,
@@ -57,10 +63,11 @@ where
                 trailers,
                 ..
             }) => {
-                let body = BodyAppStream::new(app_stream, *trailers);
+                let body: BoxBody = Box::pin(BodyAppStream::new(app_stream, *trailers));
+
                 let response = {
                     let mut builder = Response::builder().status(status);
-                    builder.headers_mut().unwrap().clone_from(headers);
+                    *builder.headers_mut().unwrap() = headers.clone();
                     builder.body(body).unwrap()
                 };
 
@@ -69,38 +76,67 @@ where
             _ => panic!("Unexpected message type"),
         }
     }
+
+    pub(crate) fn make_http_scope(
+        &self,
+        method: http::Method,
+        uri: http::Uri,
+        version: http::Version,
+        headers: http::HeaderMap,
+    ) -> HttpScope {
+        let mut http_scope = HttpScope::default();
+        http_scope.method = method;
+        http_scope.uri = uri;
+        http_scope.version = version;
+        http_scope.headers = headers;
+        http_scope.server = self.server;
+        http_scope.client = self.client;
+        http_scope
+    }
 }
 
-pub struct BodyServerStream {
+struct BodyServerStream {
     body: IncomingBody,
+    end: bool,
+}
+
+impl BodyServerStream {
+    pub fn new(body: IncomingBody) -> Self {
+        Self { body, end: false }
+    }
 }
 
 impl Stream for BodyServerStream {
     type Item = Event;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
+        if self.end {
+            return Poll::Ready(None);
+        }
+
         let frame = ready!(Pin::new(&mut self.body).poll_frame(cx));
 
-        match frame {
-            None => Poll::Ready(None),
-            Some(Err(e)) => panic!("{e}"),
-            Some(Ok(frame)) => {
-                let event = HttpEvent::ResponseChunk({
-                    let mut event = ResponseChunk::default();
-                    event.body = frame
-                        .into_data()
-                        .expect("only data is available in request");
-                    event.more = !self.body.is_end_stream();
-                    event
-                });
-
-                Poll::Ready(Some(Event::new(EVENT_HTTP.into(), event)))
+        let http_event = match frame {
+            None => {
+                self.end = true;
+                HttpEvent::RequestChunk(RequestChunk::default())
             }
-        }
+            Some(Ok(frame)) => HttpEvent::RequestChunk({
+                let mut event = RequestChunk::default();
+                event.body = frame
+                    .into_data()
+                    .expect("only data is available in request");
+                event.more = !self.body.is_end_stream();
+                event
+            }),
+            Some(Err(e)) => panic!("{e}"),
+        };
+
+        Poll::Ready(Some(Event::new(EVENT_HTTP.into(), http_event)))
     }
 }
 
-pub struct BodyAppStream<S>
+struct BodyAppStream<S>
 where
     S: Stream<Item = Event>,
 {
@@ -129,7 +165,7 @@ where
     S: Stream<Item = Event> + Unpin,
 {
     type Data = Bytes;
-    type Error = io::Error;
+    type Error = BoxError;
 
     fn poll_frame(
         mut self: Pin<&mut Self>,
@@ -167,27 +203,22 @@ where
 
 impl<T> HyperService<Request<IncomingBody>> for Servio2Hyper<T>
 where
-    T: AsgiService<BodyServerStream> + 'static,
+    T: Service<BoxStream<'static, Event>> + 'static,
 {
-    type Response = Response<BodyAppStream<T::AppStream>>;
-    type Error = hyper::Error;
+    type Response = Response<BoxBody>;
+    type Error = BoxError;
     type Future = BoxFuture<'static, Result<Self::Response, Self::Error>>;
 
     fn call(&mut self, req: Request<IncomingBody>) -> Self::Future {
         // Prepare request
         let (parts, body) = req.into_parts();
 
-        let mut http_scope = HttpScope::default();
-        http_scope.version = parts.version;
-        http_scope.method = parts.method;
-        http_scope.headers = parts.headers;
-        http_scope.uri = parts.uri;
-        http_scope.server = self.server;
-        http_scope.client = self.client;
+        let http_scope =
+            self.make_http_scope(parts.method, parts.uri, parts.version, parts.headers);
 
         let scope = Scope::new(PROTOCOL_HTTP.into()).with_scope(http_scope);
 
-        let server_stream = BodyServerStream { body };
+        let server_stream = Box::pin(BodyServerStream::new(body));
 
         // Fire scope and server stream into the wrapped service, get app stream in return
         let app_stream = self.inner.call(scope, server_stream).unwrap();

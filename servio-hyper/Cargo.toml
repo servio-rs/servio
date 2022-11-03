@@ -10,11 +10,16 @@ bytes = "1.2.1"
 futures-core = "0.3.25"
 futures-util = "0.3.25"
 hyper = { version = "1.0.0-rc.1" }
-servio = { path = "../servio" }
+servio-service = { path = "../servio-service" }
 servio-http = { path = "../servio-http" }
+
+tokio-tungstenite = "0.17.2"
+http = "0.2.8"
+tokio = { version = "1.21.2", features = ["rt"] }
+flume = "0.10.14"
 
 [dev-dependencies]
 hyper = { version = "1.0.0-rc.1", features = ["full"] }
 tokio = { version = "1.21.2", features = ["rt", "net", "macros", "rt-multi-thread"] }
-servio-helloworld = { path = "../servio-helloworld" }
 tracing-subscriber = "0.3.16"
+servio-util = { path = "../servio-util" }

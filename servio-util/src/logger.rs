@@ -1,5 +1,5 @@
 use futures_core::Stream;
-use servio::{AsgiService, Event};
+use servio_service::{Event, Service};
 use std::any::Any;
 use std::fmt::Debug;
 use std::marker::PhantomData;
@@ -25,18 +25,18 @@ where
     }
 }
 
-impl<ServerStream, Scope, S> AsgiService<ServerStream> for Logger<Scope, S>
+impl<ServerStream, Scope, S> Service<ServerStream> for Logger<Scope, S>
 where
     Scope: Any + Sync + Send + Debug,
-    ServerStream: Stream<Item = Event>,
-    S: AsgiService<ServerStream>,
+    ServerStream: Stream<Item = Event> + Send,
+    S: Service<ServerStream>,
 {
     type AppStream = S::AppStream;
     type Error = S::Error;
 
     fn call(
         &mut self,
-        scope: servio::Scope,
+        scope: servio_service::Scope,
         server_events: ServerStream,
     ) -> Result<Self::AppStream, Self::Error> {
         if let Some(scope) = scope.get::<Scope>() {

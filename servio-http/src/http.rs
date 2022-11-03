@@ -7,10 +7,10 @@ pub const EVENT_HTTP: &str = "http";
 #[non_exhaustive]
 #[derive(Clone, Debug, Default)]
 pub struct HttpScope {
-    pub version: http::Version,
     pub method: http::Method,
-    pub headers: http::HeaderMap,
     pub uri: http::Uri,
+    pub version: http::Version,
+    pub headers: http::HeaderMap,
 
     pub server: Option<SocketAddr>,
     pub client: Option<SocketAddr>,
@@ -23,6 +23,7 @@ pub enum HttpEvent {
     ResponseChunk(ResponseChunk),
     ResponseStart(ResponseStart),
     ResponseTrailer(ResponseTrailer),
+    Disconnect(Disconnect),
 }
 
 #[non_exhaustive]
@@ -53,3 +54,7 @@ pub struct ResponseTrailer {
     pub headers: http::HeaderMap,
     pub more: bool,
 }
+
+#[non_exhaustive]
+#[derive(Default, Clone, Debug)]
+pub struct Disconnect {}

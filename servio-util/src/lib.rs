@@ -1,14 +1,15 @@
 mod logger;
+pub mod response;
 
 use futures_core::Stream;
 use futures_util::stream::BoxStream;
 pub use logger::*;
-use servio::{AsgiService, Event, Scope};
+use servio_service::{Event, Scope, Service};
 use std::collections::HashMap;
 use std::io;
 
 type BoxService<'a, ServerStream, AppStream, Error> =
-    Box<dyn AsgiService<ServerStream, AppStream = AppStream, Error = Error> + Send + 'a>;
+    Box<dyn Service<ServerStream, AppStream = AppStream, Error = Error> + Send + 'a>;
 
 #[derive(Default)]
 pub struct ProtocolRouter<ServerStream>
@@ -30,9 +31,9 @@ where
     }
 }
 
-impl<ServerStream> AsgiService<ServerStream> for ProtocolRouter<ServerStream>
+impl<ServerStream> Service<ServerStream> for ProtocolRouter<ServerStream>
 where
-    ServerStream: Stream<Item = Event>,
+    ServerStream: Stream<Item = Event> + Send,
 {
     type AppStream = BoxStream<'static, Event>;
     type Error = io::Error;

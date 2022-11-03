@@ -1,6 +1,7 @@
+use http::StatusCode;
 use hyper::server::conn::http1;
-use servio_helloworld::HelloWorldService;
 use servio_hyper::Servio2Hyper;
+use servio_util::response::PlainTextResponse;
 use std::net::SocketAddr;
 use tokio::net::TcpListener;
 
@@ -14,11 +15,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     loop {
         let (stream, client) = listener.accept().await?;
 
-        let service = Servio2Hyper::new(HelloWorldService {}, Some(addr), Some(client));
+        let service = PlainTextResponse::new(StatusCode::OK, "Hello, world!".into());
+        let hyper_service = Servio2Hyper::new(service, Some(addr), Some(client));
 
         tokio::task::spawn(async move {
             if let Err(err) = http1::Builder::new()
-                .serve_connection(stream, service)
+                .serve_connection(stream, hyper_service)
                 .await
             {
                 println!("Failed to serve connection: {:?}", err);
