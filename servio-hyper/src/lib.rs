@@ -76,6 +76,7 @@ where
         }
     }
 
+    #[inline]
     pub(crate) fn make_http_scope(
         &self,
         method: http::Method,

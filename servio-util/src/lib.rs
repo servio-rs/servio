@@ -1,3 +1,4 @@
+mod buffer;
 mod logger;
 pub mod response;
 

@@ -52,6 +52,10 @@ impl Scope {
             .ok()
     }
 
+    pub fn get_ref<T: Any + Sync + Send>(&self) -> Option<&T> {
+        self.scopes.get(&TypeId::of::<T>())?.downcast_ref::<T>()
+    }
+
     /// Inserts a scope of specified type into `Scope`.
     pub fn insert<T: Any + Sync + Send>(&mut self, scope: T) -> Option<Arc<T>> {
         self.scopes
@@ -102,6 +106,10 @@ impl Event {
     /// Casts and returns event of concrete type.
     pub fn get<T: Any + Sync + Send>(&self) -> Option<Arc<T>> {
         self.event.clone().downcast::<T>().ok()
+    }
+
+    pub fn get_ref<T: Any + Sync + Send>(&self) -> Option<&T> {
+        self.event.downcast_ref::<T>()
     }
 }
 
