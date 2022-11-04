@@ -17,6 +17,7 @@ members = [
     "servio-hyper",
     "servio-service",
     "servio-util",
+    "servio-tower",
 ]
 
 [workspace.package]

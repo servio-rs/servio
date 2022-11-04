@@ -65,7 +65,7 @@ where
 }
 
 macro_rules! simple_pass {
-    ($srv:ident, $inner:ident) => {
+    ($srv:ident) => {
         #[derive(Default, Clone)]
         pub struct $srv {
             inner: StaticResponse,
@@ -90,13 +90,13 @@ macro_rules! simple_pass {
                 scope: Scope,
                 server_events: ServerStream,
             ) -> Result<Self::AppStream, Self::Error> {
-                self.$inner.call(scope, server_events)
+                self.inner.call(scope, server_events)
             }
         }
     };
 }
 
-simple_pass!(HtmlResponse, inner);
+simple_pass!(HtmlResponse);
 impl HtmlResponse {
     pub fn new(status_code: StatusCode, content: Bytes) -> Self {
         Self {
@@ -105,7 +105,7 @@ impl HtmlResponse {
     }
 }
 
-simple_pass!(PlainTextResponse, inner);
+simple_pass!(PlainTextResponse);
 impl PlainTextResponse {
     pub fn new(status_code: StatusCode, content: Cow<'static, str>) -> Self {
         Self {
@@ -119,7 +119,7 @@ impl PlainTextResponse {
 }
 
 #[cfg(feature = "serde")]
-simple_pass!(JsonResponse, inner);
+simple_pass!(JsonResponse);
 #[cfg(feature = "serde")]
 impl JsonResponse {
     pub fn new<S: serde::Serialize>(status_code: StatusCode, content: &S) -> Self {

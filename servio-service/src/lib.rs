@@ -1,8 +1,9 @@
+#![forbid(unsafe_code)]
+
 use futures_core::Stream;
 use std::any::{Any, TypeId};
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::error::Error as StdError;
 use std::hash::{BuildHasherDefault, Hasher};
 use std::sync::Arc;
 
@@ -22,6 +23,7 @@ pub struct Scope {
 
 impl Scope {
     /// Creates a new `Scope` with a specified protocol identifier.
+    #[inline]
     pub fn new(protocol: Cow<'static, str>) -> Self {
         Self {
             protocol,
@@ -30,11 +32,13 @@ impl Scope {
     }
 
     /// Returns a protocol identifier of `Scope`.
+    #[inline]
     pub fn protocol(&self) -> &str {
         &self.protocol
     }
 
     /// Returns new `Scope` with specified prococol identifier, consuming surrent `Scope`.
+    #[inline]
     pub fn with_protocol(self, protocol: Cow<'static, str>) -> Self {
         Self {
             protocol,
@@ -44,6 +48,7 @@ impl Scope {
 
     /// Returns reference-counted scope of provided type.
     /// This scope can be saved by middleware for internal use.
+    #[inline]
     pub fn get<T: Any + Sync + Send>(&self) -> Option<Arc<T>> {
         self.scopes
             .get(&TypeId::of::<T>())?
@@ -52,11 +57,14 @@ impl Scope {
             .ok()
     }
 
+    /// Returns reference to scope of provided type.
+    #[inline]
     pub fn get_ref<T: Any + Sync + Send>(&self) -> Option<&T> {
         self.scopes.get(&TypeId::of::<T>())?.downcast_ref::<T>()
     }
 
     /// Inserts a scope of specified type into `Scope`.
+    #[inline]
     pub fn insert<T: Any + Sync + Send>(&mut self, scope: T) -> Option<Arc<T>> {
         self.scopes
             .insert(TypeId::of::<T>(), Arc::new(scope))
@@ -66,6 +74,7 @@ impl Scope {
     /// Removes a scope of specified type from `Scope`.
     /// This may be useful in middlewares, that change protocol identifier or in inter-middleware
     /// communication.
+    #[inline]
     pub fn remove<T: Any + Sync + Send>(&mut self) -> Option<Arc<T>> {
         self.scopes
             .remove(&TypeId::of::<T>())
@@ -73,6 +82,7 @@ impl Scope {
     }
 
     /// Consumes `self` and returns new `Scope` with scope inserted in internal map.
+    #[inline]
     pub fn with_scope<T: Any + Sync + Send>(mut self, scope: T) -> Self {
         let _ = self.insert(scope);
         self
@@ -91,6 +101,7 @@ pub struct Event {
 
 impl Event {
     /// Creates new event of specified family and type.
+    #[inline]
     pub fn new<T: Any + Sync + Send>(family: Cow<'static, str>, event: T) -> Self {
         Self {
             family,
@@ -99,15 +110,19 @@ impl Event {
     }
 
     /// Returns event family.
+    #[inline]
     pub fn family(&self) -> &str {
         &self.family
     }
 
-    /// Casts and returns event of concrete type.
+    /// Returns reference-counted event of concrete type.
+    #[inline]
     pub fn get<T: Any + Sync + Send>(&self) -> Option<Arc<T>> {
         self.event.clone().downcast::<T>().ok()
     }
 
+    /// Returns reference event of concrete type
+    #[inline]
     pub fn get_ref<T: Any + Sync + Send>(&self) -> Option<&T> {
         self.event.downcast_ref::<T>()
     }
@@ -120,7 +135,7 @@ impl Event {
 /// ASGI equivalent: [Application](https://asgi.readthedocs.io/en/latest/specs/main.html#applications)
 pub trait Service<ServerStream: Stream<Item = Event>> {
     type AppStream: Stream<Item = Event> + Send + Unpin;
-    type Error: StdError;
+    type Error: std::error::Error;
 
     /// Main function of a service.
     fn call(
