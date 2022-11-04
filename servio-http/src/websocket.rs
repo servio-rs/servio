@@ -13,10 +13,17 @@ pub struct WebSocketScope {
 #[non_exhaustive]
 #[derive(Clone, Debug)]
 pub enum WebSocketEvent {
+    /// ASGI equivalent: `websocket.connect`
     Connect(Connect),
+    /// ASGI equivalent: `websocket.accept`
     Accept(Accept),
+    /// ASGI equivalent: `websocket.receive` and `websocket.send` with `text` field set
     TextFrame(TextFrame),
+    /// ASGI equivalent: `websocket.receive` and `websocket.send` with `bytes` field set
     BinaryFrame(BinaryFrame),
+    /// ASGI equivalent: `websocket.disconnect`
+    Disconnect(Disconnect),
+    /// ASGI equivalent: `websocket.close`
     Close(Close),
 }
 
@@ -41,6 +48,18 @@ pub struct TextFrame {
 #[derive(Default, Clone, Debug)]
 pub struct BinaryFrame {
     pub data: Bytes,
+}
+
+#[non_exhaustive]
+#[derive(Clone, Debug)]
+pub struct Disconnect {
+    pub code: u16,
+}
+
+impl Default for Disconnect {
+    fn default() -> Self {
+        Self { code: 1005 }
+    }
 }
 
 #[non_exhaustive]

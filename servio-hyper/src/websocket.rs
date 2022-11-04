@@ -3,7 +3,7 @@ use bytes::Bytes;
 use futures_core::future::BoxFuture;
 use futures_core::stream::BoxStream;
 use futures_core::{FusedStream, Stream};
-use futures_util::{SinkExt, StreamExt, TryStreamExt};
+use futures_util::{SinkExt, StreamExt};
 use http::header::{
     CONNECTION, SEC_WEBSOCKET_ACCEPT, SEC_WEBSOCKET_KEY, SEC_WEBSOCKET_PROTOCOL,
     SEC_WEBSOCKET_VERSION, UPGRADE,
@@ -77,11 +77,11 @@ where
                         if let Some(event) = e.get::<WebSocketEvent>() {
                             match event.as_ref() {
                                 WebSocketEvent::Accept(..) | WebSocketEvent::Connect(..) => panic!("unexpected message"),
-                                WebSocketEvent::TextFrame(TextFrame{data, ..}) => {ws_stream.send(Message::Text(data.clone())).await;}
-                                WebSocketEvent::BinaryFrame(BinaryFrame{data, ..}) => {ws_stream.send(Message::Binary(data.to_vec())).await;}
+                                WebSocketEvent::TextFrame(TextFrame{data, ..}) => {let _ = ws_stream.send(Message::Text(data.clone())).await;}
+                                WebSocketEvent::BinaryFrame(BinaryFrame{data, ..}) => {let _ = ws_stream.send(Message::Binary(data.to_vec())).await;}
                                 WebSocketEvent::Close(Close{code, reason, ..}) => {
                                     let reason = reason.clone().unwrap_or("".into());
-                                    ws_stream.close(Some(CloseFrame{code: (*code).into(), reason})).await;
+                                    let _ = ws_stream.close(Some(CloseFrame{code: (*code).into(), reason})).await;
                                 }
                                 _ => {}
                             }

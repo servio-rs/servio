@@ -1,3 +1,4 @@
+#[cfg(feature = "websocket")]
 mod websocket;
 
 use bytes::Bytes;
@@ -19,6 +20,8 @@ use std::net::SocketAddr;
 use std::pin::Pin;
 use std::task::{ready, Context, Poll};
 
+/// Servio to `hyper` service wrapper. It can be used to transform Servio-compatible service into
+/// `hyper`-compatible one.
 pub struct Servio2Hyper<T> {
     inner: T,
     server: Option<SocketAddr>,
@@ -44,16 +47,12 @@ where
     where
         S: Stream<Item = Event> + Send + Unpin + 'static,
     {
-        println!("abd1");
-        let event = match app_stream.next().await {
-            Some(event) => event,
-            None => panic!("Unexpected EOF from application"),
+        let Some(event) = app_stream.next().await else {
+            panic!("Unexpected EOF from application");
         };
-        println!("abd2");
 
-        let event = match event.get::<HttpEvent>() {
-            Some(event) => event,
-            None => panic!("Cannot get message from scope"),
+        let Some(event) = event.get::<HttpEvent>() else {
+            panic!("Cannot get message from scope");
         };
 
         match event.as_ref() {
@@ -172,9 +171,8 @@ where
         cx: &mut Context<'_>,
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         loop {
-            let event = match ready!(self.stream.poll_next_unpin(cx)) {
-                Some(res) => res,
-                None => return Poll::Ready(None),
+            let Some(event) = ready!(self.stream.poll_next_unpin(cx)) else {
+                return Poll::Ready(None);
             };
 
             if event.family() == EVENT_HTTP {

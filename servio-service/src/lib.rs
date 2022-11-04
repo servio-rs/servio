@@ -3,6 +3,7 @@ use std::any::{Any, TypeId};
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::error::Error as StdError;
+use std::hash::{BuildHasherDefault, Hasher};
 use std::sync::Arc;
 
 /// Request metadata, containing protocol identifier and a set of scopes, identified by type.
@@ -11,10 +12,12 @@ use std::sync::Arc;
 /// identifier by value and get one or multiple scopes.
 /// `Scope` is itself protocol-independent with protocol identifiers and scope types provided in
 /// other crates. For example, HTTP and WebSocket are defined in servio-http crate.
+///
+/// ASGI equivalent: [Connection Scope](https://asgi.readthedocs.io/en/latest/specs/main.html#connection-scope)
 #[derive(Clone, Debug)]
 pub struct Scope {
     protocol: Cow<'static, str>,
-    scopes: HashMap<TypeId, Arc<dyn Any + Sync + Send>>,
+    scopes: HashMap<TypeId, Arc<dyn Any + Sync + Send>, BuildHasherDefault<TypeIdHasher>>,
 }
 
 impl Scope {
@@ -74,6 +77,8 @@ impl Scope {
 
 /// Structure for representing an event, that is sent or received over Server- and AppStreams.
 /// Event contains family, that could be used for matching inside servers, apps and middlewares.
+///
+/// ASGI equivalent: [Event](https://asgi.readthedocs.io/en/latest/specs/main.html#events)
 #[derive(Clone, Debug)]
 pub struct Event {
     family: Cow<'static, str>,
@@ -100,7 +105,11 @@ impl Event {
     }
 }
 
-/// Trait, representing
+/// Trait, representing a Service, that is used to handle connections.
+///
+/// It can handle multiple connections at simultaneously.
+///
+/// ASGI equivalent: [Application](https://asgi.readthedocs.io/en/latest/specs/main.html#applications)
 pub trait Service<ServerStream: Stream<Item = Event>> {
     type AppStream: Stream<Item = Event> + Send + Unpin;
     type Error: StdError;
@@ -111,4 +120,24 @@ pub trait Service<ServerStream: Stream<Item = Event>> {
         scope: Scope,
         server_events: ServerStream,
     ) -> Result<Self::AppStream, Self::Error>;
+}
+
+#[derive(Default)]
+struct TypeIdHasher {
+    value: u64,
+}
+
+impl Hasher for TypeIdHasher {
+    #[inline]
+    fn finish(&self) -> u64 {
+        self.value
+    }
+
+    #[inline]
+    fn write(&mut self, bytes: &[u8]) {
+        debug_assert_eq!(bytes.len(), 8);
+        let _ = bytes
+            .try_into()
+            .map(|array| self.value = u64::from_ne_bytes(array));
+    }
 }

@@ -19,10 +19,15 @@ pub struct HttpScope {
 #[non_exhaustive]
 #[derive(Clone, Debug)]
 pub enum HttpEvent {
+    /// ASGI equivalent: `http.request`
     RequestChunk(RequestChunk),
+    /// ASGI equivalent: `http.response.body`
     ResponseChunk(ResponseChunk),
+    /// ASGI equivalent: `http.response.start`
     ResponseStart(ResponseStart),
+    /// ASGI equivalent: `http.response.trailers` (from [HTTP Trailers](https://asgi.readthedocs.io/en/latest/extensions.html#http-trailers) extension)
     ResponseTrailer(ResponseTrailer),
+    /// ASGI equivalent: `http.disconnect`
     Disconnect(Disconnect),
 }
 

@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="59.266678mm"
+   height="42.333332mm"
+   viewBox="0 0 59.266678 42.333332"
+   version="1.1"
+   id="svg5"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs2" />
+  <g
+     id="layer1"
+     transform="translate(204.88179,38.69151)">
+    <rect
+       style="fill:#5fbcd3;fill-opacity:1;stroke:none;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect363-3-6"
+       width="48.270531"
+       height="16.798958"
+       x="-227.3862"
+       y="-51.179295"
+       transform="matrix(1,0,-0.65457244,0.75599929,0,0)" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.29167px;line-height:125%;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-175.84669"
+       y="-30.912228"
+       id="text496"><tspan
+         id="tspan494"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans Bold';text-align:center;text-anchor:middle;fill:#ffffff;stroke-width:0.264583px"
+         x="-175.84669"
+         y="-30.912228">Application</tspan></text>
+    <rect
+       style="fill:#ff5555;fill-opacity:1;stroke:none;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect363-3-6-0"
+       width="48.270531"
+       height="16.798958"
+       x="-214.55739"
+       y="-31.580511"
+       transform="matrix(1,0,-0.65457244,0.75599929,0,0)" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.29167px;line-height:125%;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-175.8466"
+       y="-16.09556"
+       id="text496-6"><tspan
+         id="tspan494-2"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans Bold';text-align:center;text-anchor:middle;fill:#ffffff;stroke-width:0.264583px"
+         x="-175.8466"
+         y="-16.09556">Middleware</tspan></text>
+    <rect
+       style="fill:#5fd35f;fill-opacity:1;stroke:none;stroke-width:0;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="rect363-3-6-7"
+       width="48.270531"
+       height="16.798958"
+       x="-201.72856"
+       y="-11.981729"
+       transform="matrix(1,0,-0.65457243,0.7559993,0,0)" />
+    <text
+       xml:space="preserve"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:5.29167px;line-height:125%;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans Bold';text-align:center;letter-spacing:0px;word-spacing:0px;text-anchor:middle;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+       x="-175.8466"
+       y="-1.2788953"
+       id="text496-0"><tspan
+         id="tspan494-93"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-family:'Noto Sans';-inkscape-font-specification:'Noto Sans Bold';text-align:center;text-anchor:middle;fill:#ffffff;stroke-width:0.264583px"
+         x="-175.8466"
+         y="-1.2788953">Server</tspan></text>
+  </g>
+</svg>

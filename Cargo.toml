@@ -1,8 +1,28 @@
+[package]
+name = "servio"
+version = "0.1.0"
+readme = "README.md"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+categories.workspace = true
+keywords.workspace = true
+
+[dependencies]
+servio-service = { version = "0.1", path = "servio-service" }
+
 [workspace]
 members = [
-    "servio",
     "servio-http",
     "servio-hyper",
     "servio-service",
     "servio-util",
 ]
+
+[workspace.package]
+edition = "2021"
+rust-version = "1.65"
+repository = "https://github.com/GamePad64/servio"
+license = "MIT"
+categories = ["web-programming::http-server", "web-programming::websocket"]
+keywords = ["servio"]

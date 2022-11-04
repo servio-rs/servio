@@ -1,7 +1,12 @@
 [package]
 name = "servio-service"
 version = "0.1.0"
-edition = "2021"
+description = "Service trait and necessary parts, required to create and use Servio services. This crate follows semver with extra care."
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+categories.workspace = true
+keywords.workspace = true
 
 [dependencies]
 futures-core = "0.3.25"

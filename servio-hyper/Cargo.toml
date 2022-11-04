@@ -1,25 +1,35 @@
 [package]
 name = "servio-hyper"
 version = "0.1.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+description = "Hyper support for Servio"
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+categories.workspace = true
+keywords.workspace = true
 
 [dependencies]
+servio-http = { version = "0.1", path = "../servio-http" }
+servio-service = { version = "0.1", path = "../servio-service" }
+
 bytes = "1.2.1"
 futures-core = "0.3.25"
 futures-util = "0.3.25"
-hyper = { version = "1.0.0-rc.1" }
-servio-service = { path = "../servio-service" }
-servio-http = { path = "../servio-http" }
-
-tokio-tungstenite = "0.17.2"
 http = "0.2.8"
-tokio = { version = "1.21.2", features = ["rt"] }
-flume = "0.10.14"
+hyper = "1.0.0-rc.1"
+
+# WebSocket
+flume = { version = "0.10.14", optional = true }
+tokio = { version = "1.21.2", features = ["rt"], optional = true }
+tokio-tungstenite = { version = "0.17.2", optional = true }
 
 [dev-dependencies]
+servio-util = { version = "0.1", path = "../servio-util" }
+
 hyper = { version = "1.0.0-rc.1", features = ["full"] }
 tokio = { version = "1.21.2", features = ["rt", "net", "macros", "rt-multi-thread"] }
 tracing-subscriber = "0.3.16"
-servio-util = { path = "../servio-util" }
+
+[features]
+default = []
+websocket = ["dep:flume", "dep:tokio", "dep:tokio-tungstenite"]
