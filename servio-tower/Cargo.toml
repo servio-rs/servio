@@ -13,3 +13,4 @@ http = "0.2.8"
 http-body = "1.0.0-rc1"
 servio-http = { path = "../servio-http" }
 tower-http = "0.3.4"
+bytes = "1.2.1"
