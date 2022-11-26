@@ -1,6 +1,8 @@
 use crate::BoxService;
+use futures_core::future::BoxFuture;
 use futures_core::Stream;
 use futures_util::stream::BoxStream;
+use futures_util::FutureExt;
 use servio_service::{Event, Scope, Service};
 use std::collections::HashMap;
 use std::io;
@@ -31,16 +33,13 @@ where
 {
     type AppStream = BoxStream<'static, Event>;
     type Error = io::Error;
+    type Future = BoxFuture<'static, Result<Self::AppStream, Self::Error>>;
 
-    fn call(
-        &mut self,
-        scope: Scope,
-        server_events: ServerStream,
-    ) -> Result<Self::AppStream, Self::Error> {
+    fn call(&mut self, scope: Scope, server_events: ServerStream) -> Self::Future {
         if let Some(inner) = self.services.get_mut(scope.protocol()) {
             inner.call(scope, server_events)
         } else {
-            Err(io::ErrorKind::Unsupported.into())
+            futures_util::future::err(io::ErrorKind::Unsupported.into()).boxed()
         }
     }
 }

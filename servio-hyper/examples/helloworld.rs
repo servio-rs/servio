@@ -1,4 +1,4 @@
-use http::StatusCode;
+use http::{HeaderMap, StatusCode};
 use hyper::server::conn::http1;
 use servio_hyper::Servio2Hyper;
 use servio_util::response::PlainTextResponse;
@@ -15,7 +15,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     loop {
         let (stream, client) = listener.accept().await?;
 
-        let service = PlainTextResponse::new(StatusCode::OK, "Hello, world!".into());
+        let service =
+            PlainTextResponse::new(StatusCode::OK, "Hello, world!".into(), HeaderMap::default());
         let hyper_service = Servio2Hyper::new(service, Some(addr), Some(client));
 
         tokio::task::spawn(async move {

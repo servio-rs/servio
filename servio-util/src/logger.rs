@@ -33,12 +33,9 @@ where
 {
     type AppStream = S::AppStream;
     type Error = S::Error;
+    type Future = S::Future;
 
-    fn call(
-        &mut self,
-        scope: servio_service::Scope,
-        server_events: ServerStream,
-    ) -> Result<Self::AppStream, Self::Error> {
+    fn call(&mut self, scope: servio_service::Scope, server_events: ServerStream) -> Self::Future {
         if let Some(scope) = scope.get::<Scope>() {
             debug!("{scope:?}");
         }

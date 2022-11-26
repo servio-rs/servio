@@ -1,4 +1,5 @@
 use bytes::Bytes;
+use futures_core::stream::BoxStream;
 use futures_core::Stream;
 use http::{Request, Response};
 use http_body::Body;
@@ -7,6 +8,8 @@ use servio_service::{Event, Scope};
 use std::io;
 use std::pin::Pin;
 use std::task::{ready, Context, Poll};
+use tower_layer::Layer;
+use tower_service::Service;
 
 struct Tower2Servio<S> {
     inner: S,
@@ -72,31 +75,57 @@ where
     }
 }
 
-impl<ReqBody, ResBody, ServerStream, S> servio_service::Service<ServerStream> for Tower2Servio<S>
+impl<ServerStream, S> servio_service::Service<ServerStream> for Tower2Servio<S>
 where
     ServerStream: Stream<Item = Event>,
-    S: tower::Service<Request<ReqBody>, Response = Response<ResBody>>,
 {
-    type AppStream = ResBodyStream<ResBody>;
+    type AppStream = BoxStream<'static, Event>;
     type Error = io::Error;
 
     fn call(
         &mut self,
         scope: Scope,
         server_events: ServerStream,
-    ) -> Result<Self::AppStream, Self::Error> {
-        // let mut req = Request::new("".to_string());
-        //
-        // let http_scope = scope.get::<HttpScope>().unwrap();
-        //
-        // *req.method_mut() = http_scope.method.clone();
-        // *req.uri_mut() = http_scope.uri.clone();
-        // *req.version_mut() = http_scope.version;
-        // *req.headers_mut() = http_scope.headers.clone();
-        //
-        // req.extensions_mut().insert(scope);
-        //
-        // self.inner.call(req);
+    ) -> Result<Self::AppStream, Self::Error>
+    where
+        ReqBody: Body + Unpin + Send,
+        S: tower::Service<Request<ReqBody>, Response = Response<ResBody>>,
+    {
+        let mut b = "".to_string();
+        let mut req = Request::new(b);
+
+        let http_scope = scope.get::<HttpScope>().unwrap();
+
+        *req.method_mut() = http_scope.method.clone();
+        *req.uri_mut() = http_scope.uri.clone();
+        *req.version_mut() = http_scope.version;
+        *req.headers_mut() = http_scope.headers.clone();
+
+        req.extensions_mut().insert(scope);
+
+        self.inner.call(req);
+
         todo!()
     }
 }
+
+//
+// impl<ReqBody, ResBody, S, M> tower::Service<Request<ReqBody>> for Tower2Servio<S>
+// where
+//     S: tower::Service<Request<ReqBody>, Response = Response<ResBody>>,
+//     M: MakeHeaderValue<Request<ReqBody>>,
+// {
+//     type Response = S::Response;
+//     type Error = S::Error;
+//     type Future = S::Future;
+//
+//     #[inline]
+//     fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+//         self.inner.poll_ready(cx)
+//     }
+//
+//     fn call(&mut self, mut req: Request<ReqBody>) -> Self::Future {
+//         self.mode.apply(&self.header_name, &mut req, &mut self.make);
+//         self.inner.call(req)
+//     }
+// }

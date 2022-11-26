@@ -57,22 +57,22 @@ where
     }
 }
 
-impl<ServerStream, S> Service<ServerStream> for Buffer<S>
-where
-    ServerStream: Stream<Item = Event> + Send + Unpin + 'static,
-    S: Service<BufferedStream<ServerStream>>,
-{
-    type AppStream = S::AppStream;
-    type Error = S::Error;
-
-    fn call(
-        &mut self,
-        scope: servio_service::Scope,
-        server_events: ServerStream,
-    ) -> Result<Self::AppStream, Self::Error> {
-        let server_buffered = BufferedStream::new(server_events);
-        let app_stream = self.inner.call(scope, server_buffered)?;
-
-        Ok(app_stream)
-    }
-}
+// impl<ServerStream, S> Service<ServerStream> for Buffer<S>
+// where
+//     ServerStream: Stream<Item = Event> + Send + Unpin + 'static,
+//     S: Service<BufferedStream<ServerStream>>,
+// {
+//     type AppStream = S::AppStream;
+//     type Error = S::Error;
+//
+//     fn call(
+//         &mut self,
+//         scope: servio_service::Scope,
+//         server_events: ServerStream,
+//     ) -> Result<Self::AppStream, Self::Error> {
+//         let server_buffered = BufferedStream::new(server_events);
+//         let app_stream = self.inner.call(scope, server_buffered)?;
+//
+//         Ok(app_stream)
+//     }
+// }

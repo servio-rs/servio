@@ -4,7 +4,9 @@ use futures_core::Stream;
 use std::any::{Any, TypeId};
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::future::Future;
 use std::hash::{BuildHasherDefault, Hasher};
+use std::ops::DerefMut;
 use std::sync::Arc;
 
 /// Request metadata, containing protocol identifier and a set of scopes, identified by type.
@@ -134,15 +136,12 @@ impl Event {
 ///
 /// ASGI equivalent: [Application](https://asgi.readthedocs.io/en/latest/specs/main.html#applications)
 pub trait Service<ServerStream: Stream<Item = Event>> {
-    type AppStream: Stream<Item = Event> + Send + Unpin;
+    type AppStream: Stream<Item = Event>;
     type Error: std::error::Error;
+    type Future: Future<Output = Result<Self::AppStream, Self::Error>>;
 
     /// Main function of a service.
-    fn call(
-        &mut self,
-        scope: Scope,
-        server_events: ServerStream,
-    ) -> Result<Self::AppStream, Self::Error>;
+    fn call(&mut self, scope: Scope, server_events: ServerStream) -> Self::Future;
 }
 
 #[derive(Default)]
@@ -162,5 +161,20 @@ impl Hasher for TypeIdHasher {
         let _ = bytes
             .try_into()
             .map(|array| self.value = u64::from_ne_bytes(array));
+    }
+}
+
+impl<X, S, SS> Service<SS> for X
+where
+    X: DerefMut<Target = S>,
+    S: Service<SS>,
+    SS: Stream<Item = Event>,
+{
+    type AppStream = S::AppStream;
+    type Error = S::Error;
+    type Future = S::Future;
+
+    fn call(&mut self, scope: Scope, server_events: SS) -> Self::Future {
+        (**self).call(scope, server_events)
     }
 }
