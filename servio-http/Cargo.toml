@@ -1,6 +1,7 @@
 [package]
 name = "servio-http"
 version = "0.1.0"
+description = "HTTP types for Servo"
 edition.workspace = true
 rust-version.workspace = true
 license.workspace = true
