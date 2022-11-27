@@ -16,7 +16,7 @@ bytes = "1.2.1"
 futures-core = "0.3.25"
 futures-util = "0.3.25"
 http = "0.2.8"
-hyper = "1.0.0-rc.1"
+hyper = { version = "1.0.0-rc.1", features = ["server", "http1"] }
 
 # WebSocket
 flume = { version = "0.10.14", optional = true }

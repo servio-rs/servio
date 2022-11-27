@@ -5,10 +5,7 @@ use std::fmt::Debug;
 use std::marker::PhantomData;
 use tracing::debug;
 
-pub struct Logger<Scope, S>
-where
-    Scope: Any + Sync + Send,
-{
+pub struct Logger<Scope, S> {
     inner: S,
     _phantom: PhantomData<Scope>,
 }

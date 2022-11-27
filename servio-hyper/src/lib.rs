@@ -28,7 +28,7 @@ pub struct Servio2Hyper<T> {
 }
 
 type BoxError = Box<dyn StdError + Send + Sync>;
-type BoxBody = Pin<Box<dyn Body<Error = BoxError, Data = Bytes> + Send + Sync>>;
+type BoxBody = Pin<Box<dyn Body<Error = BoxError, Data = Bytes> + Send>>;
 
 impl<T> Servio2Hyper<T> {
     pub fn new(service: T, server: Option<SocketAddr>, client: Option<SocketAddr>) -> Self {
@@ -43,7 +43,7 @@ impl<T> Servio2Hyper<T> {
 impl<T> Servio2Hyper<T> {
     async fn build_response<AS, E>(mut app_stream: AS) -> Result<Response<BoxBody>, E>
     where
-        AS: Stream<Item = Event> + Send + Sync + Unpin + 'static,
+        AS: Stream<Item = Event> + Send + Unpin + 'static,
     {
         let Some(event) = app_stream.next().await else {
             panic!("Unexpected EOF from application");
@@ -60,7 +60,8 @@ impl<T> Servio2Hyper<T> {
                 trailers,
                 ..
             }) => {
-                let body: BoxBody = Box::pin(BodyAppStream::new(app_stream, *trailers));
+                let wrapped_body = BodyAppStream::new(app_stream, *trailers);
+                let body: BoxBody = Box::pin(wrapped_body);
 
                 let response = {
                     let mut builder = Response::builder().status(status);
@@ -176,9 +177,9 @@ where
 
 impl<T, E, F, AS> HyperService<Request<IncomingBody>> for Servio2Hyper<T>
 where
-    E: StdError + Send + Sync + 'static,
-    AS: Stream<Item = Event> + Send + Sync + Unpin + 'static,
-    F: Future<Output = Result<AS, E>> + Send + Sync + 'static,
+    E: StdError,
+    AS: Stream<Item = Event> + Send + Unpin + 'static,
+    F: Future<Output = Result<AS, E>> + Send + 'static,
     T: Service<BodyServerStream, Error = E, Future = F>,
 {
     type Response = Response<BoxBody>;
@@ -206,7 +207,7 @@ where
         let resp_fut = self
             .inner
             .call(scope, server_stream)
-            .and_then(|mut app_stream| async { Self::build_response(app_stream).await });
+            .and_then(|app_stream| async move { Self::build_response(app_stream).await });
 
         resp_fut.boxed()
     }
