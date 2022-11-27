@@ -560,7 +560,6 @@ name = "servio-util"
 version = "0.1.0"
 dependencies = [
  "bytes",
- "flume",
  "futures-core",
  "futures-util",
  "http",
@@ -568,7 +567,6 @@ dependencies = [
  "serde_json",
  "servio-http",
  "servio-service",
- "tokio",
  "tracing",
 ]
 
