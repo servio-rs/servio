@@ -22,7 +22,7 @@ hyper = { version = "1.0.0-rc.1", features = ["server", "http1"] }
 # WebSocket
 flume = { version = "0.10.14", optional = true }
 tokio = { version = "1.21.2", features = ["rt"], optional = true }
-tokio-tungstenite = { version = "0.17.2", optional = true }
+tokio-tungstenite = { version = "0.18.0", optional = true }
 
 [dev-dependencies]
 servio-util = { version = "0.1", path = "../servio-util" }
